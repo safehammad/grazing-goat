@@ -10,3 +10,4 @@
 /.rebel_readline_history
 .hgignore
 .hg/
+*.swp
