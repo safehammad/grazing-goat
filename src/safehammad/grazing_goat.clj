@@ -7,23 +7,23 @@
 (def field-radius 1)
 
 (defn point-in-circle?
-  [centre-x centre-y radius [point-x point-y]]
-  (< (+ (Math/pow (- point-x centre-x) 2) (Math/pow (- point-y centre-y) 2))
-     (Math/pow radius 2)))
+  "Return true if circle with centre [centre-x centre-y] and radius r contains point [point-x point-y]."
+  [centre-x centre-y r [point-x point-y]]
+  (let [x (- point-x centre-x)
+        y (- point-y centre-y)]
+    (< (+ (* x x) (* y y)) (* r r))))
 
-(def point-in-field? (partial point-in-circle? field-x field-y field-radius))
-(def point-in-rope?
-  "Is the point in the roped area? The rope is tied to the right edge of the field i.e. (1,0)."
-  (partial point-in-circle? field-radius field-y))
+(defn point-in-field? [point] (point-in-circle? field-x field-y field-radius point))
+(defn point-in-roped-area? [rope-len point] (point-in-circle? field-radius field-y rope-len point))
 
-(defn random-axis [] (- (rand (* 2 field-radius)) field-radius))
-(defn random-point-in-field [] [(random-axis) (random-axis)])
+(defn random-axis [] (- (rand (* 2 field-radius)) field-radius))  ; Random x or y value.
+(defn random-point-in-field [] [(random-axis) (random-axis)])     ; Random point in square surrounding field.
 
 (defn generate-outcomes
   "Generate n random points resulting in n outcomes where an outcome is [point-in-rope, point-in-field]."
   [n rope-len]
   (map
-    (fn [point] [(point-in-rope? rope-len point) (point-in-field? point)])
+    (fn [point] [(point-in-roped-area? rope-len point) (point-in-field? point)])
     (repeatedly n random-point-in-field)))
 
 (defn calculate-ratio
