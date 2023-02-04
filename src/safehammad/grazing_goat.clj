@@ -6,19 +6,12 @@
 (def field-y 0)
 (def field-radius 1)
 
-(defn dp
-  "Format to p decimal places, defaulting to 2."
-  ([p n] (format (str "%." p "f") n))
-  ([n] (dp 2 n)))
-
-(defn square [x] (* x x))
-
 (defn point-in-circle?
   "Return true if circle with centre [centre-x centre-y] and radius r contains point [point-x point-y]."
   [centre-x centre-y r [point-x point-y]]
   (let [x (- point-x centre-x)
         y (- point-y centre-y)]
-    (< (+ (square x) (square y)) (square r))))
+    (< (+ (* x x) (* y y)) (* r r))))
 
 (defn point-in-field? [point] (point-in-circle? field-x field-y field-radius point))
 (defn point-in-rope? [rope-len point] (point-in-circle? field-radius field-y rope-len point))
@@ -34,24 +27,39 @@
     (fn [point] {:rope (point-in-rope? rope-len point) :field (point-in-field? point)})
     (random-points trials)))
 
+(defn calculate-rope-len
+  "Given a pair of results, calculate the average rope length weighted by how close the ratio is to 0.5."
+  [[{rope-len1 :rope-len ratio1 :ratio} {rope-len2 :rope-len ratio2 :ratio}]]
+  (let [proportion (/ (- 0.5 ratio1) (- ratio2 ratio1))]
+    (+ rope-len1 (* proportion (- rope-len2 rope-len1)))))
+
+(defn result-pair
+  "Find the pair of results whose ratios are either side of 0.5."
+  [trial-results]
+  (->> (partition 2 1 trial-results)
+       (filter (fn [[{ratio1 :ratio} {ratio2 :ratio}]] (< ratio1 0.5 ratio2)))
+       (first)))
+
 (defn calculate-ratio
   "Given a set of outcomes, calculate the ratio of rope length to field radius."
   [outcomes]
   (let [in-field (filter :field outcomes)
-        in-rope (filter :rope in-field)]
+        in-rope  (filter :rope in-field)]
     (/ (count in-rope) (count in-field))))
 
-(defn run []
+(defn run-simulation!
+  "Run simulation with trials for a set of ever increasing rope lengths."
+  []
   (for [rope-len (range 1.0 1.25 0.01)]
-    (let [ratio (double (calculate-ratio (generate-outcomes 10000 rope-len)))]
+    (let [ratio (calculate-ratio (generate-outcomes 50000 rope-len))]
       {:rope-len rope-len :ratio ratio})))
 
 (defn -main
-  [& args]
-  (let [results (map #(update % :ratio dp) (run))
-        successes (filter #(= "0.50" (:ratio %)) results)
-        avg-rope-len (/ (apply + (map :rope-len successes)) (count successes))]
+  [& _]
+  (let [trial-results   (run-simulation!)
+        pair            (result-pair trial-results)
+        rope-len        (calculate-rope-len pair)]
     (println "Trials:\n")
-    (doseq [{:keys [rope-len ratio]} results]
-      (println "Rope length:" (dp rope-len) "-> Ratio:" ratio (if (= ratio "0.50") " <---" "")))
-    (println "\nApproximate rope length so goat can graze half the field:" (dp 3 avg-rope-len))))
+    (doseq [{:keys [rope-len ratio] :as result} trial-results]
+      (println (format "Rope length: %.3f -> Ratio: %.3f %s" rope-len (float ratio) (if ((set pair) result) " <---" ""))))
+    (println (format "\nApproximate rope length so goat can graze half the field: %.4f" rope-len))))

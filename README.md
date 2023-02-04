@@ -7,7 +7,7 @@ a recreational mathematical problem described as follows:
 long a rope do you need to allow the animal access to exactly half that area?"
 
 Despite this puzzle existing for over 250 years, a method to arrive at an exact solution was only
-[found in 2020](https://www.quantamagazine.org/mathematician-solves-centuries-old-grazing-goat-problem-exactly-20201209/).
+[found in 2020](https://www.quantamagazine.org/after-centuries-a-seemingly-simple-math-problem-gets-an-exact-solution-20201209/).
 
 This application arrives at a very approximate solution using the [Monte Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method).
 Random dots are fired in the coordinate space of the field for multiple trials of rope length. Each trial calculates the proportion of
