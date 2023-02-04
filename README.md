@@ -29,6 +29,6 @@ To run:
 
 ## License
 
-Copyright © 2020 Safe Hammad
+Copyright © 2020-2023 Safe Hammad
 
 Distributed under the Eclipse Public License version 1.0.

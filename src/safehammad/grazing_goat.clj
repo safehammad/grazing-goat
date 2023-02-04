@@ -16,16 +16,12 @@
 (defn point-in-field? [point] (point-in-circle? field-x field-y field-radius point))
 (defn point-in-rope? [rope-len point] (point-in-circle? field-radius field-y rope-len point))
 
-(defn random-axis [] (- (rand (* 2 field-radius)) field-radius))  ; Random x or y value.
-(defn random-point-in-field [] [(random-axis) (random-axis)])     ; Random point in square surrounding field.
-(defn random-points [n] (repeatedly n random-point-in-field))     ; Generate n random points in field
-
-(defn generate-outcomes
+(defn calculate-outcomes
   "Generate `trials` random points with true/false outcomes where a point is in the roped area and/or the field."
-  [trials rope-len]
+  [rope-len points]
   (map
     (fn [point] {:rope (point-in-rope? rope-len point) :field (point-in-field? point)})
-    (random-points trials)))
+    points))
 
 (defn calculate-rope-len
   "Given a pair of results, calculate the average rope length weighted by how close the ratio is to 0.5."
@@ -47,16 +43,26 @@
         in-rope  (filter :rope in-field)]
     (/ (count in-rope) (count in-field))))
 
+(defn calculate-ratios
+  "Run simulation with trials for a set of ever increasing rope lengths."
+  [trials]
+  (for [{:keys [rope-len points]} trials]
+    (let [ratio (calculate-ratio (calculate-outcomes rope-len points))]
+      {:rope-len rope-len :ratio ratio})))
+
+(defn random-axis! [] (- (rand (* 2 field-radius)) field-radius))  ; Random x or y value.
+(defn random-point-in-field! [] [(random-axis!) (random-axis!)])   ; Random point in square surrounding field.
+
 (defn run-simulation!
   "Run simulation with trials for a set of ever increasing rope lengths."
   []
   (for [rope-len (range 1.0 1.25 0.01)]
-    (let [ratio (calculate-ratio (generate-outcomes 50000 rope-len))]
-      {:rope-len rope-len :ratio ratio})))
+    {:rope-len rope-len :points (repeatedly 50000 random-point-in-field!)}))
 
 (defn -main
   [& _]
-  (let [trial-results   (run-simulation!)
+  (let [trials          (run-simulation!)
+        trial-results   (calculate-ratios trials)
         pair            (result-pair trial-results)
         rope-len        (calculate-rope-len pair)]
     (println "Trials:\n")
