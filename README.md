@@ -9,13 +9,17 @@ long a rope do you need to allow the animal access to exactly half that area?"
 Despite this puzzle existing for over 250 years, a method to arrive at an exact solution was only
 [found in 2020](https://www.quantamagazine.org/after-centuries-a-seemingly-simple-math-problem-gets-an-exact-solution-20201209/).
 
-This application arrives at a very approximate solution using the [Monte Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method).
-Random dots are fired in the coordinate space of the field for multiple trials of rope length. Each trial calculates the proportion of
-the number of dots landing in the roped area compared to the number of dots landing in the full fenced area. When that proportion is
-0.5, we have our solution! The resulting length of the rope is expressed as a multiple of the radius of the enclosed area.
-
+This application arrives at a very approximate solution using the [Monte Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method). Random dots are fired in the coordinate space of the field for multiple trials of rope length. Each trial calculates the proportion of the number of dots landing in the roped area compared to the number of dots landing in the full fenced area. When that proportion is 0.5, we have our solution! The resulting length of the rope is expressed as a multiple of the radius of the enclosed area.
 
 ![](https://raw.githubusercontent.com/safehammad/grazing-goat/main/animation.gif)
+
+## Random Number Generation
+
+Two methods of random number generation are used for comparison:
+
+1. The standard built-in (pseudo)random number generation using the `rand` function.
+
+2. [Halton sequence](https://en.wikipedia.org/wiki/Halton_sequence), a deterministic sequence of points which appears random but gives a more even "spread" across the coordinate space, making it very suitable for the Monte Carlo method.
 
 ## Installation
 

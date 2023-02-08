@@ -50,22 +50,52 @@
     (let [ratio (calculate-ratio (calculate-outcomes rope-len points))]
       {:rope-len rope-len :ratio ratio})))
 
+(defn halton-at
+  "Calculate the number in the Halton sequence at the given `index` for the given `base`."
+  [index base]
+  (loop [fraction 1
+         result   0
+         index    index]
+    (if (pos? index)
+      (let [fraction (/ fraction base)]
+        (recur fraction
+               (+ result (* fraction (mod index base)))
+               (quot index base)))
+      result)))
+
+(defn halton-axis [n base]
+  (let [halton-seq (map #(halton-at % base) (iterate inc 1))]
+    (map #(-> % (* 2) (- 1)) (take n halton-seq))))
+
+(defn halton-points []
+  (let [xs (halton-axis 5000 2)
+        ys (halton-axis 5000 3)
+        points (map vector xs ys)]
+    points))
+
 (defn random-axis! [] (- (rand (* 2 field-radius)) field-radius))  ; Random x or y value.
 (defn random-point-in-field! [] [(random-axis!) (random-axis!)])   ; Random point in square surrounding field.
 
-(defn run-simulation!
-  "Run simulation with trials for a set of ever increasing rope lengths."
-  []
+(defn random-points! []
+  (repeatedly 50000 random-point-in-field!))
+
+(defn make-trials [points]
   (for [rope-len (range 1.0 1.25 0.01)]
-    {:rope-len rope-len :points (repeatedly 50000 random-point-in-field!)}))
+    {:rope-len rope-len :points points}))
+
+(defn run-simulation!
+  [points]
+  (let [trials        (make-trials points)
+        trial-results (calculate-ratios trials)
+        pair          (result-pair trial-results)
+        rope-len      (calculate-rope-len pair)]
+    (doseq [{:keys [rope-len ratio] :as result} trial-results]
+      (println (format "Rope length: %.3f -> Ratio: %.3f %s" rope-len (float ratio) (if ((set pair) result) " <---" ""))))
+    (println (format "Approximate rope length so goat can graze half the field: %.4f" rope-len))))
 
 (defn -main
   [& _]
-  (let [trials          (run-simulation!)
-        trial-results   (calculate-ratios trials)
-        pair            (result-pair trial-results)
-        rope-len        (calculate-rope-len pair)]
-    (println "Trials:\n")
-    (doseq [{:keys [rope-len ratio] :as result} trial-results]
-      (println (format "Rope length: %.3f -> Ratio: %.3f %s" rope-len (float ratio) (if ((set pair) result) " <---" ""))))
-    (println (format "\nApproximate rope length so goat can graze half the field: %.4f" rope-len))))
+  (print "\nRandom Trials:\n")
+  (run-simulation! (random-points!))
+  (print "\nHalton Trials:\n")
+  (run-simulation! (halton-points)))
